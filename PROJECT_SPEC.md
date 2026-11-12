@@ -138,14 +138,24 @@ Steps:
 2. The service loads the registered clip and creates a `pending` inspection.
 3. The state gate moves the record to `scanning`.
 4. The frame pipeline decodes sampled frames and computes luma/color
-   fingerprints.
-5. The detector selects hard cuts whose distance exceeds the sensitivity
-   threshold while honoring the minimum scene length.
-6. Scene ranges and representative frames are persisted and the inspection
+   fingerprints one sample at a time.
+5. The incremental analyzer compares each adjacent fingerprint pair and
+   accepts hard cuts whose distance exceeds the sensitivity threshold while
+   honoring the minimum scene length.
+6. A scene becomes final as soon as the accepted cut that opens the next scene
+   stops later samples from entering it. Final scenes are handed to the
+   inspection record immediately and their fingerprints are released; only the
+   in-progress scene and the most recent sample remain in memory.
+7. The trailing scene is finalized at the clip frame count, and the inspection
    moves to `indexed`.
 
-Any decode, range, or persistence error moves the record to `failed` with a
-stable code. Successful inspections are immutable.
+Analysis sessions own their state. An aborted session releases its work and
+discards results it delivered without committing them, so it cannot affect
+another inspection that is still running. Any decode, range, or persistence
+error moves the record to `failed` with a stable code and no partial scene
+data. Successful inspections are immutable. No streaming response or
+checkpoint recovery surface is exposed; requests still return once, at the
+terminal state.
 
 ### 3. Create contact sheet
 

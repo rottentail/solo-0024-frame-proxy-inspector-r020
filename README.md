@@ -8,9 +8,11 @@ footage into two review artifacts:
 
 The service verifies the RIFF/AVI container, frame geometry, and frame chunk
 count before it admits a clip. Shot indexing then computes luma and color
-fingerprints from sampled frames and applies a minimum-scene guard to hard
-cuts. Contact sheet requests are checked against a fixed pixel budget before
-frame decoding starts.
+fingerprints from sampled frames as a forward-only scan: each sample is
+fingerprinted and compared with its predecessor, a scene is handed to the
+result as soon as no later sample can change it, and only the scene still in
+progress stays in memory. Contact sheet requests are checked against a fixed
+pixel budget before frame decoding starts.
 
 Automated unit, integration, and browser tests are intentionally deferred to a
 later task stage. This baseline ships executable workflow checks instead.
